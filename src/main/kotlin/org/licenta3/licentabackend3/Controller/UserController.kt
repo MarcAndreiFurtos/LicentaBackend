@@ -1,6 +1,7 @@
 package org.licenta3.licentabackend3.Controller
 
 
+import org.licenta3.licentabackend3.DTO.UserDto
 import org.licenta3.licentabackend3.Entities.User
 import org.licenta3.licentabackend3.Service.UserService
 import org.springframework.http.ResponseEntity
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*
 class UserController(private val userService: UserService) {
 
     @PostMapping
-    fun createUser(@RequestBody user: User): ResponseEntity<User> {
+    fun createUser(@RequestBody user: UserDto): ResponseEntity<User> {
         val savedUser = userService.createUser(user)
         return ResponseEntity.ok(savedUser)
     }
@@ -23,7 +24,7 @@ class UserController(private val userService: UserService) {
     }
 
     @PutMapping("/{id}")
-    fun updateUser(@PathVariable id: Long, @RequestBody user: User): ResponseEntity<User> {
+    fun updateUser(@PathVariable id: Long, @RequestBody user: UserDto): ResponseEntity<User> {
         val updatedUser = userService.updateUser(id, user)
         return ResponseEntity.ok(updatedUser)
     }

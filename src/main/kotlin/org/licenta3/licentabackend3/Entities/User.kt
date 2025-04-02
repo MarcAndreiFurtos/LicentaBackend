@@ -15,11 +15,10 @@ data class User(
     @Embedded
     var address: Address,
 
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var tokenizedCards: List<TokenizedCard> = mutableListOf(),
-
     @OneToOne(cascade = [CascadeType.ALL])
-    var profilePicture: ProfilePicture? = null
+    var profilePicture: ProfilePicture? = null,
+
+    var rating : Long = 0
 )
 
 @Embeddable

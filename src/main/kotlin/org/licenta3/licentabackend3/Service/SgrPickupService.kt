@@ -5,6 +5,7 @@ import org.licenta3.licentabackend3.DTO.SgrPickupETAResponseDTO
 import org.licenta3.licentabackend3.Entities.SgrPickup
 import org.licenta3.licentabackend3.Entities.SgrPickupStatus
 import org.licenta3.licentabackend3.Repository.SgrPickupRepository
+import org.licenta3.licentabackend3.Repository.UserRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -20,7 +21,9 @@ const val ITEM_WORTH = 0.5
 class SgrPickupService(
     private val sgrPickupRepository: SgrPickupRepository,
     private val restTemplate: RestTemplate,
-    private val wisePaymentService: WisePaymentService
+    private val wisePaymentService: WisePaymentService,
+    private val emailService: EmailService,
+    private val userRepository: UserRepository
 ) {
 
     @Value("\${google.maps.api.key}")
@@ -54,18 +57,23 @@ class SgrPickupService(
         return distance["text"] as String
     }
 
-    fun saveSgrPickup(mPickup: String, destination: String, sackVolume: Int): SgrPickup {
+    fun saveSgrPickup(mPickup: String, destination: String, sackVolume: Int, userId:Long): SgrPickup {
         val etaResponse = calculateETA(mPickup, destination)
-        val distance = calculateDistance(mPickup, destination)
-
         val sgrPickup = SgrPickup(
             mPickup = mPickup,
             destination = destination,
             value = estimateSackValue(sackVolume),
-            estimatedTime = etaResponse.estimatedTime,
-            distance = distance
+            estimatedTime = etaResponse.estimatedTime
         )
-        return sgrPickupRepository.save(sgrPickup)
+        val savedPickup = sgrPickupRepository.save(sgrPickup)
+val user = userRepository.findById(userId).orElseThrow { RuntimeException("User not found") }
+        emailService.sendEmail(
+            user.email,
+            "New SgrPickup Created",
+            "Your SgrPickup request from $mPickup to $destination has been created."
+        )
+
+        return savedPickup
     }
 
     fun estimateSackValue(sackVolume: Int): Double {

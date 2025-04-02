@@ -24,7 +24,7 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
     fun createSgrPickup(
         @RequestParam sgrDto: SgrPickupDto,
     ): ResponseEntity<SgrPickup> {
-        val savedSgrPickup = sgrPickupService.saveSgrPickup(sgrDto.mPickup, sgrDto.destination, sgrDto.sackSizeLiters)
+        val savedSgrPickup = sgrPickupService.saveSgrPickup(sgrDto.mPickup, sgrDto.destination, sgrDto.sackSizeLiters, sgrDto.userId)
         return ResponseEntity.ok(savedSgrPickup)
     }
 
