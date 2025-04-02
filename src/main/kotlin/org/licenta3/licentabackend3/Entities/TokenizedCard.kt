@@ -10,7 +10,10 @@ data class TokenizedCard(
     val id: Long = 0,
     val token: String = "",
     val cardholderName: String = "",
-    val hashedExpirationDate: String = "" // Hashed for security
+    val hashedExpirationDate: String = "",
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    val user: User
 ) {
     companion object {
         fun hashExpirationDate(expirationDate: String): String {

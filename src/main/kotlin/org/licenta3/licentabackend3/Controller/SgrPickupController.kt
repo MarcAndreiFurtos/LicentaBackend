@@ -51,6 +51,7 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
         val canceledPickups = sgrPickupService.getCanceledSgrPickups()
         return ResponseEntity.ok(canceledPickups)
     }
+
     @PutMapping("/{id}/pay")
     fun markAsPaid(@PathVariable id: Long): ResponseEntity<SgrPickup> {
         val updatedSgrPickup = sgrPickupService.markAsPaid(id)

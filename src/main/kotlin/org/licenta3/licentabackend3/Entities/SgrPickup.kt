@@ -1,4 +1,5 @@
 package org.licenta3.licentabackend3.Entities
+
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -16,6 +17,9 @@ data class SgrPickup(
     @Column(name = "eta")
     var estimatedTime: String? = null,
 
+    @Column(name = "distance")
+    var distance: String? = null, // Added field for distance
+
     @Enumerated(EnumType.STRING)
     var status: SgrPickupStatus = SgrPickupStatus.PENDING,
 
@@ -27,4 +31,3 @@ data class SgrPickup(
 enum class SgrPickupStatus {
     PENDING, COMPLETED, CANCELLED
 }
-

@@ -1,6 +1,5 @@
 package org.licenta3.licentabackend3.Service
 
-
 import jakarta.transaction.Transactional
 import org.licenta3.licentabackend3.DTO.SgrPickupETAResponseDTO
 import org.licenta3.licentabackend3.Entities.SgrPickup
@@ -16,12 +15,14 @@ const val BOTTLE_VOLUME = 1.0
 const val CAN_VOLUME = 0.33
 const val BOTTLE_RATIO = 0.5
 const val ITEM_WORTH = 0.5
+
 @Service
 class SgrPickupService(
     private val sgrPickupRepository: SgrPickupRepository,
     private val restTemplate: RestTemplate,
     private val wisePaymentService: WisePaymentService
 ) {
+
     @Value("\${google.maps.api.key}")
     private lateinit var googleApiKey: String
 
@@ -41,16 +42,32 @@ class SgrPickupService(
         )
     }
 
+    fun calculateDistance(mPickup: String, destination: String): String {
+        val url = "https://maps.googleapis.com/maps/api/distancematrix/json" +
+                "?origins=$mPickup&destinations=$destination&key=$googleApiKey"
+
+        val response = restTemplate.getForObject(url, Map::class.java) as Map<String, Any>
+        val rows = response["rows"] as List<Map<String, Any>>
+        val elements = rows[0]["elements"] as List<Map<String, Any>>
+        val distance = elements[0]["distance"] as Map<String, Any>
+
+        return distance["text"] as String
+    }
+
     fun saveSgrPickup(mPickup: String, destination: String, sackVolume: Int): SgrPickup {
         val etaResponse = calculateETA(mPickup, destination)
+        val distance = calculateDistance(mPickup, destination)
+
         val sgrPickup = SgrPickup(
             mPickup = mPickup,
             destination = destination,
             value = estimateSackValue(sackVolume),
-            estimatedTime = etaResponse.estimatedTime
+            estimatedTime = etaResponse.estimatedTime,
+            distance = distance
         )
         return sgrPickupRepository.save(sgrPickup)
     }
+
     fun estimateSackValue(sackVolume: Int): Double {
         val volumeDouble = sackVolume.toDouble()
         val effectiveVolume = volumeDouble * PACKING_EFFICIENCY
@@ -69,6 +86,7 @@ class SgrPickupService(
             processPaymentIfEligible(it)
         }
     }
+
     @Transactional
     fun markAsPaid(id: Long): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
@@ -80,6 +98,7 @@ class SgrPickupService(
             processPaymentIfEligible(it)
         }
     }
+
     private fun processPaymentIfEligible(sgrPickup: SgrPickup) {
         if (sgrPickup.status == SgrPickupStatus.COMPLETED && sgrPickup.paidFor) {
             val amountToPay = sgrPickup.value * 0.50 // 50% of value
@@ -87,6 +106,7 @@ class SgrPickupService(
             println("IBAN Transfer Successful: Transfer ID = $transferId")
         }
     }
+
     @Transactional
     fun cancelSgrPickup(id: Long): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
