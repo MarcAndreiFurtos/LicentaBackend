@@ -14,7 +14,7 @@ data class TokenizedCard(
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    val user: User, // This reference links back to the user
+    val user: User,
 ) {
     companion object {
         fun hashExpirationDate(expirationDate: String): String {

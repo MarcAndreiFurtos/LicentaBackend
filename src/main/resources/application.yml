@@ -1,0 +1,58 @@
+server:
+  port: 8080
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres4
+    username: postgres
+    password: password
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 3000000
+      max-lifetime: 1800000
+      connection-timeout: 3000000
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com
+    password: your-email-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  mvc:
+    static-path-pattern: /webjars/**
+
+google:
+  maps:
+    api:
+      key: your-google-maps-api-key
+
+paypal:
+  api:
+    clientId: "AWypv_8Y1396W2z_luZEqoa4gn2CpkNiwO7pGiVhBxSAZByfs5rHCSKZC11PMXXV94UKZE7VFoWXNUnf"
+    secret: "EIKo0R61wskWIZbJ4134h0UH30xz_ldU26RtaYt3sJzIonvHPe91xeuj2wP4BBvLmg_BxDIizN7pNPCG"
+    baseUrl: "https://api-m.sandbox.paypal.com"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
+    operations-sorter: alpha
+    tags-sorter: alpha
+

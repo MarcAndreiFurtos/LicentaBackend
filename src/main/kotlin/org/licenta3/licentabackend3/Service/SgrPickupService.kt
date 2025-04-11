@@ -1,11 +1,14 @@
 package org.licenta3.licentabackend3.Service
 
 import jakarta.transaction.Transactional
+import org.licenta3.licentabackend3.DTO.SgrPickupDto
 import org.licenta3.licentabackend3.DTO.SgrPickupETAResponseDTO
 import org.licenta3.licentabackend3.Entities.SgrPickup
 import org.licenta3.licentabackend3.Entities.SgrPickupStatus
 import org.licenta3.licentabackend3.Repository.SgrPickupRepository
+import org.licenta3.licentabackend3.Repository.TokenizedCardRepository
 import org.licenta3.licentabackend3.Repository.UserRepository
+import org.licenta3.licentabackend3.service.PayPalPaymentService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -21,9 +24,11 @@ const val ITEM_WORTH = 0.5
 class SgrPickupService(
     private val sgrPickupRepository: SgrPickupRepository,
     private val restTemplate: RestTemplate,
-    private val wisePaymentService: WisePaymentService,
+    private val payPalPaymentService: PayPalPaymentService,
     private val emailService: EmailService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val tokenizedCardRepository: TokenizedCardRepository,
+    private val tokenizationService: TokenizationService
 ) {
 
     @Value("\${google.maps.api.key}")
@@ -85,32 +90,34 @@ val user = userRepository.findById(userId).orElseThrow { RuntimeException("User 
     }
 
     @Transactional
-    fun completeSgrPickup(id: Long): SgrPickup {
+    fun completeSgrPickup(id: Long,sgrPickupDto: SgrPickupDto): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
             throw RuntimeException("SgrPickup not found with ID: $id")
         }
         sgrPickup.status = SgrPickupStatus.COMPLETED
         return sgrPickupRepository.save(sgrPickup).also {
-            processPaymentIfEligible(it)
+            processPaymentIfEligible(it,sgrPickupDto)
         }
     }
 
     @Transactional
-    fun markAsPaid(id: Long): SgrPickup {
+    fun markAsPaid(id: Long,sgrPickupDto: SgrPickupDto): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
             throw RuntimeException("SgrPickup not found with ID: $id")
         }
 
         sgrPickup.paidFor = true
         return sgrPickupRepository.save(sgrPickup).also {
-            processPaymentIfEligible(it)
+            processPaymentIfEligible(it,sgrPickupDto)
         }
     }
 
-    private fun processPaymentIfEligible(sgrPickup: SgrPickup) {
+    private fun processPaymentIfEligible(sgrPickup: SgrPickup, sgrPickupDto: SgrPickupDto) {
         if (sgrPickup.status == SgrPickupStatus.COMPLETED && sgrPickup.paidFor) {
             val amountToPay = sgrPickup.value * 0.50 // 50% of value
-            val transferId = wisePaymentService.transferToIban(BigDecimal(amountToPay))
+            val user = userRepository.findById(sgrPickupDto.userId).orElseThrow { RuntimeException("User not found") }
+            val card = tokenizedCardRepository.findByUser(user).get(sgrPickupDto.cardId.toInt())
+            val transferId = payPalPaymentService.transferToIban(BigDecimal(amountToPay),"euro", card.cardholderName, tokenizationService.detokenize(card.token))
             println("IBAN Transfer Successful: Transfer ID = $transferId")
         }
     }

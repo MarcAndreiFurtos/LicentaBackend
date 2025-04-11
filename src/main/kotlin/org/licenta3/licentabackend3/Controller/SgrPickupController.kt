@@ -29,8 +29,8 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
     }
 
     @PutMapping("/{id}/complete")
-    fun completeSgrPickup(@PathVariable id: Long): ResponseEntity<SgrPickup> {
-        val updatedSgrPickup = sgrPickupService.completeSgrPickup(id)
+    fun completeSgrPickup(@PathVariable id: Long,@RequestParam sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
+        val updatedSgrPickup = sgrPickupService.completeSgrPickup(id,sgrDto)
         return ResponseEntity.ok(updatedSgrPickup)
     }
 
@@ -53,8 +53,8 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
     }
 
     @PutMapping("/{id}/pay")
-    fun markAsPaid(@PathVariable id: Long): ResponseEntity<SgrPickup> {
-        val updatedSgrPickup = sgrPickupService.markAsPaid(id)
+    fun markAsPaid(@PathVariable id: Long, @RequestParam sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
+        val updatedSgrPickup = sgrPickupService.markAsPaid(id, sgrDto)
         return ResponseEntity.ok(updatedSgrPickup)
     }
 }
