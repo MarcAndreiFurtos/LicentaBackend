@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/cards")
+@CrossOrigin(origins = ["*"] )
 class CardController(private val cardService: CardService) {
 
     @PostMapping("/tokenize")
