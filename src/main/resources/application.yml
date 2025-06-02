@@ -45,8 +45,8 @@ google:
 # Replaced PayPal configuration with Stripe
 stripe:
   api:
-    secretKey: 
-    publishableKey: 
+    secretKey: "sk_test_51RTPNgFawibChNbgnxmPjWiWOZJXvNDlG0LtWoGQbHsRwK8LHGL4A6O3AJ8NfkCqr06qiD2bjTEbFXxbVVGewwS1005HwHJ4RS"
+    publishableKey: "pk_test_51RTPNgFawibChNbgqRpgSKarzJlRdDAuGsmxmy13gZFuhkj4UfMilv4Agx2yr3n5eg6pOnwK1xDjAhcJlpj5kSmq003sVhDP08"
     baseUrl: "https://api.stripe.com"
     webhookSecret: "whsec_your_webhook_secret_here"  # Optional: for webhook verification
 
