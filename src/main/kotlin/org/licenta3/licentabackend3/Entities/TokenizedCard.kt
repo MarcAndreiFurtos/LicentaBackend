@@ -10,7 +10,7 @@ data class TokenizedCard(
     val id: Long = 0,
     val token: String = "",
     val cardholderName: String = "",
-    val hashedExpirationDate: String = "",
+    val accountId: String = "",
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

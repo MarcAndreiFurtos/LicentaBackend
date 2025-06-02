@@ -13,21 +13,21 @@ class AppConfig {
     fun restTemplate(): RestTemplate {
         return RestTemplate()
     }
-
-    @Bean
-    fun javaMailSender(): JavaMailSender {
-        val mailSender = JavaMailSenderImpl()
-        mailSender.host = "smtp.gmail.com"
-        mailSender.port = 587
-        mailSender.username = "your-email@gmail.com"
-        mailSender.password = "your-app-password"
-
-        val props: Properties = mailSender.javaMailProperties
-        props["mail.transport.protocol"] = "smtp"
-        props["mail.smtp.auth"] = "true"
-        props["mail.smtp.starttls.enable"] = "true"
-        props["mail.debug"] = "true" // Enable this for debugging
-
-        return mailSender
-    }
+//
+//    @Bean
+//    fun javaMailSender(): JavaMailSender {
+//        val mailSender = JavaMailSenderImpl()
+//        mailSender.host = "smtp.gmail.com"
+//        mailSender.port = 587
+//        mailSender.username = "your-email@gmail.com"
+//        mailSender.password = "your-app-password"
+//
+//        val props: Properties = mailSender.javaMailProperties
+//        props["mail.transport.protocol"] = "smtp"
+//        props["mail.smtp.auth"] = "true"
+//        props["mail.smtp.starttls.enable"] = "true"
+//        props["mail.debug"] = "true" // Enable this for debugging
+//
+//        return mailSender
+//    }
 }

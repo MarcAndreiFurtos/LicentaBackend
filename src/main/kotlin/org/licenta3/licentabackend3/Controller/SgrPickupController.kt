@@ -3,33 +3,33 @@ package org.licenta3.licentabackend3.Controller
 import org.licenta3.licentabackend3.DTO.SgrPickupDto
 import org.licenta3.licentabackend3.DTO.SgrPickupETAResponseDTO
 import org.licenta3.licentabackend3.Entities.SgrPickup
+import org.licenta3.licentabackend3.Entities.SgrPickupStatus
 import org.licenta3.licentabackend3.Service.SgrPickupService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/sgrpickup")
+@RequestMapping("/api/sgrPickup")
 class SgrPickupController(private val sgrPickupService: SgrPickupService) {
 
-    @GetMapping("/eta")
+    @GetMapping("/{id}/eta")
     fun getETA(
-        @RequestParam mPickup: String,
-        @RequestParam destination: String
+        @PathVariable id: Long
     ): ResponseEntity<SgrPickupETAResponseDTO> {
-        val etaResponse = sgrPickupService.calculateETA(mPickup, destination)
+        val etaResponse = sgrPickupService.calculateETA(id)
         return ResponseEntity.ok(etaResponse)
     }
 
     @PostMapping
     fun createSgrPickup(
-        @RequestParam sgrDto: SgrPickupDto,
+        @RequestBody sgrDto: SgrPickupDto,
     ): ResponseEntity<SgrPickup> {
-        val savedSgrPickup = sgrPickupService.saveSgrPickup(sgrDto.mPickup, sgrDto.destination, sgrDto.sackSizeLiters, sgrDto.userId)
+        val savedSgrPickup = sgrPickupService.saveSgrPickup(sgrDto.driverLocation, sgrDto.destination, sgrDto.sackSizeLiters, sgrDto.userId)
         return ResponseEntity.ok(savedSgrPickup)
     }
 
     @PutMapping("/{id}/complete")
-    fun completeSgrPickup(@PathVariable id: Long,@RequestParam sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
+    fun completeSgrPickup(@PathVariable id: Long,@RequestBody sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
         val updatedSgrPickup = sgrPickupService.completeSgrPickup(id,sgrDto)
         return ResponseEntity.ok(updatedSgrPickup)
     }
@@ -40,21 +40,43 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
         return ResponseEntity.ok(updatedSgrPickup)
     }
 
-    @GetMapping("/history")
-    fun getCompletedSgrPickups(): ResponseEntity<List<SgrPickup>> {
-        val completedPickups = sgrPickupService.getCompletedSgrPickups()
+    @GetMapping("/{userId}/history")
+    fun getCompletedSgrPickups(@PathVariable userId: Long): ResponseEntity<List<SgrPickup>> {
+        val completedPickups = sgrPickupService.getCompletedSgrPickups(userId)
         return ResponseEntity.ok(completedPickups)
     }
 
-    @GetMapping("/canceled")
-    fun getCanceledSgrPickups(): ResponseEntity<List<SgrPickup>> {
-        val canceledPickups = sgrPickupService.getCanceledSgrPickups()
-        return ResponseEntity.ok(canceledPickups)
+    @GetMapping("/{userId}/pending")
+    fun getPendingSgrPickups(@PathVariable userId: Long): ResponseEntity<List<SgrPickup>> {
+        val pendingPickups = sgrPickupService.getPendingSgrPickups(userId)
+        return ResponseEntity.ok(pendingPickups)
     }
 
+    @GetMapping("/{userId}/canceled")
+    fun getCanceledSgrPickups(@PathVariable userId: Long): ResponseEntity<List<SgrPickup>> {
+        val canceledPickups = sgrPickupService.getCanceledSgrPickups(userId)
+        return ResponseEntity.ok(canceledPickups)
+    }
+    @GetMapping("/{id}/status")
+    fun getPickupStatus(@PathVariable id: Long): ResponseEntity<SgrPickupStatus> {
+        return ResponseEntity.ok(sgrPickupService.getPickupStatus(id))
+    }
     @PutMapping("/{id}/pay")
-    fun markAsPaid(@PathVariable id: Long, @RequestParam sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
+    fun markAsPaid(@PathVariable id: Long, @RequestBody sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
         val updatedSgrPickup = sgrPickupService.markAsPaid(id, sgrDto)
         return ResponseEntity.ok(updatedSgrPickup)
     }
+
+    @PutMapping("/{id}/progress")
+    fun markInProgress(@PathVariable id: Long,  @RequestBody sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
+        val updatedSgrPickup = sgrPickupService.markInProgress(id, sgrDto)
+        return ResponseEntity.ok(updatedSgrPickup)
+    }
+
+    @PutMapping("/{id}/dLocation")
+    fun updateDriverLocation(@PathVariable id: Long, @RequestBody sgrDto: SgrPickupDto): ResponseEntity<SgrPickup> {
+        val updatedSgrPickup = sgrPickupService.updateDriverLocation(id, sgrDto)
+        return ResponseEntity.ok(updatedSgrPickup)
+    }
+
 }
