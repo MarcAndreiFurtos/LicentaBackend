@@ -9,8 +9,8 @@ data class SgrPickup(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(name = "m_pickup")
-    val mPickup: String,
+    @Column(name = "d_location")
+    var driverLocation: String,
 
     val destination: String,
 
@@ -18,16 +18,23 @@ data class SgrPickup(
     var estimatedTime: String? = null,
 
     @Column(name = "distance")
-    var distance: String? = null, // Added field for distance
+    var distance: String? = null,
 
     @Enumerated(EnumType.STRING)
     var status: SgrPickupStatus = SgrPickupStatus.PENDING,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val value: Double = 0.0,
-    var paidFor: Boolean = false
+    var paidFor: Boolean = false,
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    val user: User,
+
+    @ManyToOne
+    @JoinColumn(name = "driver_id", nullable = false)
+    var driver: User ,
 )
 
 enum class SgrPickupStatus {
-    PENDING, COMPLETED, CANCELLED
+    PENDING, IN_PROGRESS, COMPLETED, CANCELLED
 }

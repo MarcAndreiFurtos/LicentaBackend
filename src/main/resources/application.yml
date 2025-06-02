@@ -26,8 +26,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: your-email@gmail.com
-    password: your-email-password
+    username: furtosmarc@gmail.com
+    password: kpusqjcnnnwkxqmf
     properties:
       mail:
         smtp:
@@ -40,13 +40,22 @@ spring:
 google:
   maps:
     api:
-      key: your-google-maps-api-key
+      key: AIzaSyC1IXPN2zqdY6iCUxpwopAYH1m3VTKFqdE
 
-paypal:
+# Replaced PayPal configuration with Stripe
+stripe:
   api:
-    clientId:
-    secret:
-    baseUrl: "https://api-m.sandbox.paypal.com"
+    secretKey: "sk_test_51RTPNgFawibChNbgnxmPjWiWOZJXvNDlG0LtWoGQbHsRwK8LHGL4A6O3AJ8NfkCqr06qiD2bjTEbFXxbVVGewwS1005HwHJ4RS"
+    publishableKey: "pk_test_51RTPNgFawibChNbgqRpgSKarzJlRdDAuGsmxmy13gZFuhkj4UfMilv4Agx2yr3n5eg6pOnwK1xDjAhcJlpj5kSmq003sVhDP08"
+    baseUrl: "https://api.stripe.com"
+    webhookSecret: "whsec_your_webhook_secret_here"  # Optional: for webhook verification
+
+# Keep PayPal config commented out for reference
+# paypal:
+#   api:
+#     clientId: "AWypv_8Y1396W2z_luZEqoa4gn2CpkNiwO7pGiVhBxSAZByfs5rHCSKZC11PMXXV94UKZE7VFoWXNUnf"
+#     secret: "EIKo0R61wskWIZbJ4134h0UH30xz_ldU26RtaYt3sJzIonvHPe91xeuj2wP4BBvLmg_BxDIizN7pNPCG"
+#     baseUrl: "https://api-m.sandbox.paypal.com"
 
 springdoc:
   api-docs:
@@ -55,4 +64,3 @@ springdoc:
     path: /swagger-ui
     operations-sorter: alpha
     tags-sorter: alpha
-

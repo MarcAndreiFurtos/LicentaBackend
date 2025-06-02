@@ -11,15 +11,20 @@ data class User(
     val id: Long? = null,
 
     var email: String,
-    var password: String,
 
     @Embedded
     var address: Address,
 
-    @OneToOne(cascade = [CascadeType.ALL])
-    var profilePicture: ProfilePicture? = null,
+    var firstName: String = "",
 
-    var rating : Long = 0
+    var lastName: String = "",
+
+    @Column(length = 10000000)
+    var profilePicture: String = "",
+
+    var rating : Long = 0,
+
+    var connectedAccount  :String = "",
 )
 
 @Embeddable

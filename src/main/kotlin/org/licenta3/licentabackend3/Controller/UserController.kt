@@ -1,6 +1,7 @@
 package org.licenta3.licentabackend3.Controller
 
 
+import org.licenta3.licentabackend3.DTO.ProfilePictureDto
 import org.licenta3.licentabackend3.DTO.UserDto
 import org.licenta3.licentabackend3.Entities.User
 import org.licenta3.licentabackend3.Service.UserService
@@ -8,13 +9,19 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 class UserController(private val userService: UserService) {
 
     @PostMapping
     fun createUser(@RequestBody user: UserDto): ResponseEntity<User> {
         val savedUser = userService.createUser(user)
         return ResponseEntity.ok(savedUser)
+    }
+
+    @PutMapping("/profilePicture")
+    fun updateUserProfilePicture (@RequestBody profilePictureDto: ProfilePictureDto): ResponseEntity<User> {
+        userService.updateUserProfilePicture(profilePictureDto.userId, profilePictureDto.incriptedImmage)
+        return ResponseEntity.ok().build()
     }
 
     @GetMapping("/{id}")
@@ -33,6 +40,11 @@ class UserController(private val userService: UserService) {
     fun deleteUser(@PathVariable id: Long): ResponseEntity<Void> {
         userService.deleteUser(id)
         return ResponseEntity.noContent().build()
+    }
+    @GetMapping("/{email}")
+    fun getUserByEmail(@PathVariable email: String): ResponseEntity<User> {
+        val user = userService.getUserByEmail(email)
+        return ResponseEntity.ok(user)
     }
 
     @GetMapping

@@ -32,4 +32,8 @@ class CardController(private val cardService: CardService) {
         cardService.deleteCard(id)
         return ResponseEntity.noContent().build()
     }
+    @GetMapping
+    fun getAllByUserId(@PathVariable userId : Long): List<CardDto> {
+        return cardService.getAllCardsByUser(userId)
+    }
 }

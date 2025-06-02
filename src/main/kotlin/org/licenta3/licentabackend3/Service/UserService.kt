@@ -3,7 +3,6 @@ package org.licenta3.licentabackend3.Service
 import jakarta.transaction.Transactional
 import org.licenta3.licentabackend3.DTO.UserDto
 import org.licenta3.licentabackend3.Entities.Address
-import org.licenta3.licentabackend3.Entities.ProfilePicture
 import org.licenta3.licentabackend3.Entities.TokenizedCard
 import org.licenta3.licentabackend3.Entities.User
 import org.licenta3.licentabackend3.Repository.UserRepository
@@ -20,17 +19,15 @@ class UserService(private val userRepository: UserRepository) {
             country = userDto.address.country
         )
 
-        val profilePicture = userDto.profilePicture?.let {
-            ProfilePicture(incriptedImmage = it.incriptedImmage)
-        }
-
 
         val user = User(
             email = userDto.email,
-            password = userDto.password,
             address = address,
-            profilePicture = profilePicture,
-            rating = userDto.rating
+            profilePicture = userDto.profilePicture,
+            rating = userDto.rating,
+            firstName = userDto.firstName,
+            lastName = userDto.lastName,
+            connectedAccount = userDto.conectedAccount
         )
 
         return userRepository.save(user)
@@ -42,21 +39,29 @@ class UserService(private val userRepository: UserRepository) {
         }
     }
 
+    fun getUserByEmail(email: String): User {
+        return userRepository.findByEmail(email)[0];
+    }
+
     @Transactional
     fun updateUser(id: Long, userDto: UserDto): User {
         val existingUser = getUserById(id)
         existingUser.email = userDto.email
-        existingUser.password = userDto.password
         existingUser.address = Address(
             street = userDto.address.street,
             city = userDto.address.city,
             postalCode = userDto.address.postalCode,
             country = userDto.address.country
         )
-        userDto.profilePicture?.let {
-            existingUser.profilePicture = ProfilePicture(incriptedImmage = it.incriptedImmage)
-        }
+        existingUser.profilePicture = userDto.profilePicture
         existingUser.rating = userDto.rating
+        return userRepository.save(existingUser)
+    }
+
+    @Transactional
+    fun updateUserProfilePicture(id: Long, profilePicture: String): User {
+        val existingUser = getUserById(id)
+        existingUser.profilePicture = profilePicture
         return userRepository.save(existingUser)
     }
 
