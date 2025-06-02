@@ -44,8 +44,8 @@ google:
 
 paypal:
   api:
-    clientId: "AWypv_8Y1396W2z_luZEqoa4gn2CpkNiwO7pGiVhBxSAZByfs5rHCSKZC11PMXXV94UKZE7VFoWXNUnf"
-    secret: "EIKo0R61wskWIZbJ4134h0UH30xz_ldU26RtaYt3sJzIonvHPe91xeuj2wP4BBvLmg_BxDIizN7pNPCG"
+    clientId:
+    secret:
     baseUrl: "https://api-m.sandbox.paypal.com"
 
 springdoc:
