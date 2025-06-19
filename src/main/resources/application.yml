@@ -15,7 +15,7 @@ spring:
       max-request-size: 50MB
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres4
+    url: jdbc:postgresql://localhost:5432/postgres-0
     username: postgres
     password: password
     hikari:
