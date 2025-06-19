@@ -46,7 +46,8 @@ class WebSecurityConfig {
         configuration.allowedOrigins = listOf(
             "http://localhost:3000",
             "https://licenta-driver-frontend.vercel.app",
-            "https://LicentaBackend.azurewebsites.net"
+            "https://licentabackend-f2dpe8f5fjh8bff4.germanywestcentral-01.azurewebsites.net",
+            "https://*.vercel.app"
         )
 
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
