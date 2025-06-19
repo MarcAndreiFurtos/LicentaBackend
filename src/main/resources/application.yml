@@ -5,7 +5,7 @@ server:
     key-store: keystore.p12
     key-store-password: picpicpic3
     key-store-type: PKCS12
-    key-alias: myapi
+    key-alias: tomcat
     enabled-protocols: TLSv1.2,TLSv1.3
 
 spring:
