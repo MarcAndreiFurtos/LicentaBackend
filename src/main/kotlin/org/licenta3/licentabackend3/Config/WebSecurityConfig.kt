@@ -7,9 +7,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import jakarta.servlet.http.HttpServletRequest
 
 @Configuration
 @EnableWebSecurity
@@ -23,15 +25,30 @@ class WebSecurityConfig {
             .authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS).permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/info").permitAll() // Azure health checks
                     .anyRequest().permitAll()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            // Trust Azure's proxy headers for HTTPS detection
+            .requiresChannel { channel ->
+                channel.requestMatchers(
+                    RequestMatcher { request: HttpServletRequest ->
+                        request.getHeader("X-Forwarded-Proto") != null
+                    }
+                ).requiresSecure()
+            }
             .build()
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("http://localhost:3000","https://licenta-driver-frontend.vercel.app/")
+
+        configuration.allowedOrigins = listOf(
+            "http://localhost:3000",
+            "https://licenta-driver-frontend.vercel.app",
+            "https://LicentaBackend.azurewebsites.net"
+        )
+
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.allowCredentials = true
