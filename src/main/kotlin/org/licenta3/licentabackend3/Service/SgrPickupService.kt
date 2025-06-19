@@ -5,7 +5,6 @@ import org.licenta3.licentabackend3.DTO.SgrPickupDto
 import org.licenta3.licentabackend3.DTO.SgrPickupETAResponseDTO
 import org.licenta3.licentabackend3.Entities.SgrPickup
 import org.licenta3.licentabackend3.Entities.SgrPickupStatus
-import org.licenta3.licentabackend3.Entities.TokenizedCard
 import org.licenta3.licentabackend3.Entities.User
 import org.licenta3.licentabackend3.Repository.SgrPickupRepository
 import org.licenta3.licentabackend3.Repository.TokenizedCardRepository
@@ -41,7 +40,7 @@ class SgrPickupService(
         val sgrPickup = sgrPickupRepository.findById(pickupId).orElseThrow {
             throw RuntimeException("SgrPickup not found with ID: $pickupId")
         }
-        return calculateETASubFct(sgrPickup.driverLocation,sgrPickup.destination)
+        return calculateETASubFct(sgrPickup.driverLocation, sgrPickup.pickupLocation)
     }
 
     fun calculateETASubFct(driverLocation: String, destination: String): SgrPickupETAResponseDTO {
@@ -60,43 +59,115 @@ class SgrPickupService(
         )
     }
 
-    fun calculateDistance(mPickup: String, destination: String): String {
-        val url = "https://maps.googleapis.com/maps/api/distancematrix/json" +
-                "?origins=$mPickup&destinations=$destination&key=$googleApiKey"
 
-        val response = restTemplate.getForObject(url, Map::class.java) as Map<String, Any>
-        val rows = response["rows"] as List<Map<String, Any>>
-        val elements = rows[0]["elements"] as List<Map<String, Any>>
-        val distance = elements[0]["distance"] as Map<String, Any>
+    fun validateAddress(address: String): Boolean {
+        try {
+            val encodedAddress = java.net.URLEncoder.encode(address, "UTF-8")
+            val url = "https://maps.googleapis.com/maps/api/geocode/json" +
+                    "?address=$encodedAddress" +
+                    "&key=$googleApiKey"
 
-        return distance["text"] as String
+            val response = restTemplate.getForObject(url, Map::class.java) as Map<String, Any>
+            val status = response["status"] as? String
+
+            return status == "OK" && (response["results"] as? List<*>)?.isNotEmpty() == true
+        } catch (e: Exception) {
+            println("Error validating address '$address': ${e.message}")
+            return false
+        }
     }
 
-    fun getPickupStatus(pickupId:Long): SgrPickupStatus {
+    fun calculateETAWithValidation(driverLocation: String, destination: String): SgrPickupETAResponseDTO {
+
+        if (!validateAddress(driverLocation)) {
+            throw RuntimeException("Invalid driver location: '$driverLocation'. Please provide a valid address.")
+        }
+
+        if (!validateAddress(destination)) {
+            throw RuntimeException("Invalid destination: '$destination'. Please provide a valid address.")
+        }
+
+        return calculateETASubFct(driverLocation, destination)
+    }
+
+    fun calculateETAWithRetry(driverLocation: String, destination: String, maxRetries: Int = 3): SgrPickupETAResponseDTO {
+        var lastException: Exception? = null
+
+        repeat(maxRetries) { attempt ->
+            try {
+                return calculateETASubFct(driverLocation, destination)
+            } catch (e: Exception) {
+                lastException = e
+                println("Attempt ${attempt + 1} failed: ${e.message}")
+
+                if (attempt < maxRetries - 1) {
+                    Thread.sleep((1000 * (attempt + 1)).toLong())
+                }
+            }
+        }
+
+        println("All $maxRetries attempts failed. Last error: ${lastException?.message}")
+        return SgrPickupETAResponseDTO(
+            estimatedTime = "Unavailable",
+            distance = "Unavailable"
+        )
+    }
+
+    fun calculateDistance(mPickup: String, destination: String): String {
+        try {
+            val url = "https://maps.googleapis.com/maps/api/distancematrix/json" +
+                    "?origins=${java.net.URLEncoder.encode(mPickup, "UTF-8")}" +
+                    "&destinations=${java.net.URLEncoder.encode(destination, "UTF-8")}" +
+                    "&key=$googleApiKey"
+
+            val response = restTemplate.getForObject(url, Map::class.java) as Map<String, Any>
+
+            val rows = response["rows"] as? List<Map<String, Any>>
+            if (rows.isNullOrEmpty()) {
+                return "Distance unavailable"
+            }
+
+            val elements = rows[0]["elements"] as? List<Map<String, Any>>
+            if (elements.isNullOrEmpty()) {
+                return "Distance unavailable"
+            }
+
+            val firstElement = elements[0]
+            val status = firstElement["status"] as? String
+            if (status != "OK") {
+                return "Distance unavailable"
+            }
+
+            val distance = firstElement["distance"] as? Map<String, Any>
+            return distance?.get("text") as? String ?: "Distance unavailable"
+        } catch (e: Exception) {
+            println("Error calculating distance: ${e.message}")
+            return "Distance unavailable"
+        }
+    }
+
+    fun getPickupStatus(pickupId: Long): SgrPickupStatus {
         val pickup = sgrPickupRepository.findById(pickupId).orElseThrow { RuntimeException("User not found") }
         return pickup.status
     }
 
-    fun saveSgrPickup(mPickup: String, destination: String, sackVolume: Int, userId:Long): SgrPickup {
-        val etaResponse = calculateETASubFct(mPickup, destination)
+    fun saveSgrPickup(mPickup: String, pickupLocation: String, sackVolume: Int, userId: Long): SgrPickup {
         val user = userRepository.findById(userId).orElseThrow { RuntimeException("User not found") }
         val sgrPickup = SgrPickup(
             driverLocation = mPickup,
-            destination = destination,
+            pickupLocation = pickupLocation,
             value = estimateSackValue(sackVolume),
-            estimatedTime = etaResponse.estimatedTime,
+            estimatedTime = "0",
             user = user,
-//          user creates the pickup and has no  knowledge of who the driver will be at the creation time
             driver = user,
         )
         val savedPickup = sgrPickupRepository.save(sgrPickup)
         emailService.sendEmail(
             user.email,
             "New SgrPickup Created",
-            "Your SgrPickup request $destination has been created. Our riders will soon pick up the order , we will be on our way soon :))" +
-                    "Our Regards," +
+            "Your SgrPickup request $pickupLocation has been created. Our riders will soon pick up the order, we will be on our way soon :))\n" +
+                    "Our Regards,\n" +
                     "The SgrPickup Team"
-
         )
 
         return savedPickup
@@ -111,25 +182,25 @@ class SgrPickupService(
     }
 
     @Transactional
-    fun completeSgrPickup(id: Long,sgrPickupDto: SgrPickupDto): SgrPickup {
+    fun completeSgrPickup(id: Long, sgrPickupDto: SgrPickupDto): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
             throw RuntimeException("SgrPickup not found with ID: $id")
         }
         sgrPickup.status = SgrPickupStatus.COMPLETED
         return sgrPickupRepository.save(sgrPickup).also {
-            processPaymentIfEligible(it,sgrPickupDto)
+            processPaymentIfEligible(it, sgrPickupDto)
         }
     }
 
     @Transactional
-    fun markAsPaid(id: Long,sgrPickupDto: SgrPickupDto): SgrPickup {
+    fun markAsPaid(id: Long, sgrPickupDto: SgrPickupDto): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
             throw RuntimeException("SgrPickup not found with ID: $id")
         }
 
         sgrPickup.paidFor = true
         return sgrPickupRepository.save(sgrPickup).also {
-            processPaymentIfEligible(it,sgrPickupDto)
+            processPaymentIfEligible(it, sgrPickupDto)
         }
     }
 
@@ -144,12 +215,12 @@ class SgrPickupService(
         sgrPickup.driver = driver
         sgrPickup.driverLocation = sgrPickupDto.driverLocation
         return sgrPickupRepository.save(sgrPickup).also {
-            stripePaymentService.receivePayment(sgrPickup.value,"RON",tokenizationService.detokenize(card.token),card.accountId)
+            stripePaymentService.receivePayment(sgrPickup.value, "RON", tokenizationService.detokenize(card.token), card.accountId)
         }
     }
 
     @Transactional
-    fun updateDriverLocation(id: Long,sgrPickupDto: SgrPickupDto): SgrPickup {
+    fun updateDriverLocation(id: Long, sgrPickupDto: SgrPickupDto): SgrPickup {
         val sgrPickup = sgrPickupRepository.findById(id).orElseThrow {
             throw RuntimeException("SgrPickup not found with ID: $id")
         }
@@ -175,10 +246,6 @@ class SgrPickupService(
         amountToPay: Double
     ) {
         if (user.connectedAccount.equals("")) {
-//            val account =
-//                stripePaymentService.createConnectedAccountWithDetails(user.email, user.firstName, user.lastName, "RO")
-//            user.connectedAccount = account["accountId"].toString()
-//            userRepository.save(user)
             throw RuntimeException("Connected Account not connected")
         }
         try {
@@ -217,14 +284,22 @@ class SgrPickupService(
     }
 
     fun getCompletedSgrPickups(userId: Long): List<SgrPickup> {
-        return sgrPickupRepository.findByStatus(SgrPickupStatus.COMPLETED).filter{it.user.id == userId}
+        return sgrPickupRepository.findByStatus(SgrPickupStatus.COMPLETED).filter { it.user.id == userId }
+    }
+
+    fun getCompletedSgrPickupsDriver(userId: Long): List<SgrPickup> {
+        return sgrPickupRepository.findByStatus(SgrPickupStatus.COMPLETED).filter { it.driver.id == userId }
     }
 
     fun getPendingSgrPickups(userId: Long): List<SgrPickup> {
-        return sgrPickupRepository.findByStatus(SgrPickupStatus.PENDING).filter{it.user.id == userId}
+        return sgrPickupRepository.findByStatus(SgrPickupStatus.PENDING).filter { it.user.id == userId }
+    }
+
+    fun getPendingSgrPickupsWithoutId(): List<SgrPickup> {
+        return sgrPickupRepository.findByStatus(SgrPickupStatus.PENDING)
     }
 
     fun getCanceledSgrPickups(userId: Long): List<SgrPickup> {
-        return sgrPickupRepository.findByStatus(SgrPickupStatus.CANCELLED).filter{it.user.id == userId}
+        return sgrPickupRepository.findByStatus(SgrPickupStatus.CANCELLED).filter { it.user.id == userId }
     }
 }

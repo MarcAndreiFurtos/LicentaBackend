@@ -39,8 +39,13 @@ class UserService(private val userRepository: UserRepository) {
         }
     }
 
-    fun getUserByEmail(email: String): User {
-        return userRepository.findByEmail(email)[0];
+    fun getUserByEmail(email: String): User? {
+        try {
+            return userRepository.findByEmail(email)[0];
+        }
+        catch (e: RuntimeException) {
+            return null
+        }
     }
 
     @Transactional

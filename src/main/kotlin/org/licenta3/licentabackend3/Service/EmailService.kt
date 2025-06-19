@@ -12,7 +12,7 @@ class EmailService(private val mailSender: JavaMailSender) {
         val helper = MimeMessageHelper(message, true)
         helper.setTo(to)
         helper.setSubject(subject)
-        helper.setText(content, true) // true enables HTML content
+        helper.setText(content, true)
         mailSender.send(message)
     }
 }

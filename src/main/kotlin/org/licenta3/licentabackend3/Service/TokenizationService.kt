@@ -13,7 +13,7 @@ class TokenizationService {
 
     private val keySize = 256
     private val gcmTagLength = 128
-    private val ivSize = 12 // Recommended IV size for GCM
+    private val ivSize = 12
     private val secretKey: SecretKey = generateSecretKey()
 
     fun tokenize(cardNumber: String): String {
@@ -24,7 +24,6 @@ class TokenizationService {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, GCMParameterSpec(gcmTagLength, iv))
         val encryptedBytes = cipher.doFinal(cardNumber.toByteArray())
 
-        // Store IV and encrypted data together (Base64 encoded)
         val ivAndEncryptedData = iv + encryptedBytes
         return Base64.getEncoder().encodeToString(ivAndEncryptedData)
     }

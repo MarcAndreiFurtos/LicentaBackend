@@ -41,9 +41,12 @@ class UserController(private val userService: UserService) {
         userService.deleteUser(id)
         return ResponseEntity.noContent().build()
     }
-    @GetMapping("/{email}")
+    @GetMapping("/email/{email}")
     fun getUserByEmail(@PathVariable email: String): ResponseEntity<User> {
         val user = userService.getUserByEmail(email)
+        if (user == null) {
+            return ResponseEntity.notFound().build()
+        }
         return ResponseEntity.ok(user)
     }
 

@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component
 class CardMapper {
     fun maptoDto(card: TokenizedCard):CardDto{
         val userId = card.user.id
-        return userId?.let { CardDto(card.token,card.cardholderName,card.accountId, it) }!!
+        return userId?.let { CardDto(card.token,card.cardholderName,card.accountId, it,card.id) }!!
     }
 }

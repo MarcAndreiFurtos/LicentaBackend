@@ -12,7 +12,7 @@ data class SgrPickup(
     @Column(name = "d_location")
     var driverLocation: String,
 
-    val destination: String,
+    val pickupLocation: String,
 
     @Column(name = "eta")
     var estimatedTime: String? = null,
@@ -32,7 +32,7 @@ data class SgrPickup(
 
     @ManyToOne
     @JoinColumn(name = "driver_id", nullable = false)
-    var driver: User ,
+    var driver: User,
 )
 
 enum class SgrPickupStatus {

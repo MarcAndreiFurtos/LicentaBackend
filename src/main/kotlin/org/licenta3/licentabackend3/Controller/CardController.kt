@@ -17,7 +17,7 @@ class CardController(private val cardService: CardService) {
         return ResponseEntity.ok(tokenizedCard)
     }
 
-    @GetMapping("/{token}")
+    @GetMapping("/token/{token}")
     fun getCardByToken(@PathVariable token: String): ResponseEntity<TokenizedCard> {
         val card = cardService.getCardByToken(token)
         return if (card != null) {
@@ -32,7 +32,7 @@ class CardController(private val cardService: CardService) {
         cardService.deleteCard(id)
         return ResponseEntity.noContent().build()
     }
-    @GetMapping
+    @GetMapping("/all/{userId}")
     fun getAllByUserId(@PathVariable userId : Long): List<CardDto> {
         return cardService.getAllCardsByUser(userId)
     }

@@ -4,13 +4,17 @@ import org.licenta3.licentabackend3.DTO.SgrPickupDto
 import org.licenta3.licentabackend3.DTO.SgrPickupETAResponseDTO
 import org.licenta3.licentabackend3.Entities.SgrPickup
 import org.licenta3.licentabackend3.Entities.SgrPickupStatus
+import org.licenta3.licentabackend3.Repository.SgrPickupRepository
 import org.licenta3.licentabackend3.Service.SgrPickupService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/sgrPickup")
-class SgrPickupController(private val sgrPickupService: SgrPickupService) {
+class SgrPickupController(
+    private val sgrPickupService: SgrPickupService,
+    private val sgrPickupRepository: SgrPickupRepository
+) {
 
     @GetMapping("/{id}/eta")
     fun getETA(
@@ -24,7 +28,7 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
     fun createSgrPickup(
         @RequestBody sgrDto: SgrPickupDto,
     ): ResponseEntity<SgrPickup> {
-        val savedSgrPickup = sgrPickupService.saveSgrPickup(sgrDto.driverLocation, sgrDto.destination, sgrDto.sackSizeLiters, sgrDto.userId)
+        val savedSgrPickup = sgrPickupService.saveSgrPickup(sgrDto.driverLocation, sgrDto.pickupLocation, sgrDto.sackSizeLiters, sgrDto.userId)
         return ResponseEntity.ok(savedSgrPickup)
     }
 
@@ -46,9 +50,20 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
         return ResponseEntity.ok(completedPickups)
     }
 
+    @GetMapping("/{userId}/historyDriver")
+    fun getCompletedSgrPickupsDriver(@PathVariable userId: Long): ResponseEntity<List<SgrPickup>> {
+        val completedPickups = sgrPickupService.getCompletedSgrPickupsDriver(userId)
+        return ResponseEntity.ok(completedPickups)
+    }
     @GetMapping("/{userId}/pending")
     fun getPendingSgrPickups(@PathVariable userId: Long): ResponseEntity<List<SgrPickup>> {
         val pendingPickups = sgrPickupService.getPendingSgrPickups(userId)
+        return ResponseEntity.ok(pendingPickups)
+    }
+
+    @GetMapping("/pending")
+    fun getPendingSgrPickupsWithoutId(): ResponseEntity<List<SgrPickup>> {
+        val pendingPickups = sgrPickupService.getPendingSgrPickupsWithoutId()
         return ResponseEntity.ok(pendingPickups)
     }
 
@@ -79,4 +94,9 @@ class SgrPickupController(private val sgrPickupService: SgrPickupService) {
         return ResponseEntity.ok(updatedSgrPickup)
     }
 
+    @GetMapping("/{id}")
+    fun getPickupById(@PathVariable id: Long): ResponseEntity<SgrPickup> {
+        val sgrPickup = sgrPickupRepository.findById(id).orElseThrow()
+        return ResponseEntity.ok(sgrPickup)
+    }
 }
